@@ -1,0 +1,131 @@
+﻿@{
+    ViewData["Title"] = "Security cameras Utrecht";
+}
+@model IndexViewModel
+
+<h1>Security cameras Utrecht</h1>
+<div id="map"></div>
+<div id="source">
+    source:
+    <a href="https://data.overheid.nl/dataset/camera-s">https://data.overheid.nl/dataset/camera-s</a>
+</div>
+<main>
+    <table id="cameraTableContainer">
+        <tbody>
+            <tr>
+                <td>
+                    <table id="column3">
+                        <thead>
+                            <tr>
+                                <th colspan="4">Cameras 3</th>
+                            </tr>
+                            <tr>
+                                <th>Number</th>
+                                <th>Name</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <partial name="_CameraPartial" model="@Model.Cameras.Where(cam => cam.Id % 3 == 0)" />
+                        </tbody>
+                    </table>
+                </td>
+                <td>
+                    <table id="column5">
+                        <thead>
+                            <tr>
+                                <th colspan="4">Cameras 5</th>
+                            </tr>
+                            <tr>
+                                <th>Number</th>
+                                <th>Name</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <partial name="_CameraPartial" model="@Model.Cameras.Where(cam => cam.Id % 5 == 0)" />
+                        </tbody>
+                    </table>
+                </td>
+                <td>
+                    <table id="column15">
+                        <thead>
+                            <tr>
+                                <th colspan="4">Cameras 3 &amp; 5</th>
+                            </tr>
+                            <tr>
+                                <th>Number</th>
+                                <th>Name</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <partial name="_CameraPartial" model="@Model.Cameras.Where(cam => cam.Id % 3 == 0 && cam.Id % 5 == 0)" />
+                        </tbody>
+                    </table>
+                </td>
+                <td>
+                    <table id="columnOther">
+                        <thead>
+                            <tr>
+                                <th colspan="4">Cameras Overig</th>
+                            </tr>
+                            <tr>
+                                <th>Number</th>
+                                <th>Name</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <partial name="_CameraPartial" model="@Model.Cameras.Where(cam => cam.Id % 3 > 0 && cam.Id % 5 > 0)" />
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+
+<script type="text/javascript">
+$('document').ready(function(){
+    var map = L.map('map').setView([52.0914, 5.1115], 13);
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: ''
+    }).addTo(map);
+
+    getCameras(map);
+
+});
+
+function getCameras(map){
+    var myIcon = L.icon({
+        iconUrl: '/video-camera-icon.png',
+        iconSize: [25, 25],
+        iconAnchor: [22, 94],
+        popupAnchor: [-10, -90],
+    });
+
+    $.ajax({
+    type: "Get",
+    url: "/Home/GetCameras/",
+    contentType: "application/json; charset=utf-8",
+    dataType: "json",
+    success: function (data) {
+        var json = JSON.parse(data);
+        json.forEach(element => {
+            var marker = L.marker([element.latitude, element.longitude], { title: element.name, icon: myIcon}).addTo(map);
+            marker.bindPopup(element.name);
+        });
+    }
+    });
+}
+</script>
